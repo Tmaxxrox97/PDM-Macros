@@ -1,0 +1,79 @@
+Option Explicit
+
+Dim swApp As Object
+Dim FILE_PATH As String
+Dim FOLDER_PATH As String
+Dim FILE_NAME As String
+Dim EXTENSION As String
+Dim PLANT_DRAWINGS As String
+Dim pdmVault As Object
+Dim file As Object
+Dim folder As Object
+Dim strFileExists As String
+Dim addfile As String
+Const ForAppending = 8
+Const TriStateDefault = -2
+
+Sub Log2File(Message As String)
+    Dim oFSO As Object
+    Dim oFile As Object
+    'Dim Logfile As String
+
+    If Len(Dir("<VaultPath>\Logs\Share_Plant_Drawings", vbDirectory)) = 0 Then
+       MkDir "<VaultPath>\Logs\Share_Plant_Drawings"
+    End If
+
+    Set oFSO = CreateObject("Scripting.FileSystemObject")
+    Set oFile = oFSO.OpenTextFile("<VaultPath>\Logs\Share_Plant_Drawings\<TaskInstanceGuid>.log", ForAppending, TriStateDefault)
+    oFile.WriteLine Message
+    oFile.Close
+End Sub
+
+Sub main()
+
+    On Error GoTo Fail:
+    Set swApp = Application.SldWorks
+    FILE_PATH = "<Filepath>"
+    FOLDER_PATH = "<Path>"
+    FILE_NAME = Mid(FILE_PATH, InStrRev(FILE_PATH, "\") + 1, InStrRev(FILE_PATH, ".") - InStrRev(FILE_PATH, "\") - 1)
+    EXTENSION = Right(FILE_PATH, Len(FILE_PATH) - InStrRev(FILE_PATH, "."))
+    PLANT_DRAWINGS = "<VaultPath>\Plant Drawings\DXFs\"
+    FILE_NAME = PLANT_DRAWINGS & "\" & FILE_NAME & "." & EXTENSION
+    
+    Log2File "FILE_PATH " & FILE_PATH
+    Log2File "EXTENSION " & EXTENSION
+    Log2File "FILE_NAME " & FILE_NAME
+
+    strFileExists = Dir(FILE_NAME)
+    
+    Log2File "strFileExists " & strFileExists
+
+    If strFileExists = "" Then
+
+        Log2File "Begin File Add"
+        Log2File "Logging into Vault"
+        Set pdmVault = CreateObject("ConisioLib.EdmVault")
+
+        'pdmVault.LoginAuto "SRC Vault", 0
+        pdmVault.Login "Admin", "P4ssw0rd", "SRC Vault"
+    
+        If pdmVault.IsLoggedIn Then
+            Log2File "Logged into Vault"
+            Set folder = pdmVault.GetFolderFromPath(FOLDER_PATH)
+            Set file = pdmVault.GetFileFromPath(FILE_PATH, folder)
+            Set folder = pdmVault.GetFolderFromPath(PLANT_DRAWINGS)
+            Log2File "Adding to Vault"
+            addfile = folder.AddFileShared(file.ID, 0)
+            Log2File addfile
+        Else
+            Err.Raise vbError, "User is not logged in to the vault"
+            Log2File "User is not logged in to the vault"
+        End If
+    
+    Else
+        Log2File "File already Shared"
+    End If
+Fail:
+    Log2File "Errored out"
+    Log2File "End of Program"
+End Sub
