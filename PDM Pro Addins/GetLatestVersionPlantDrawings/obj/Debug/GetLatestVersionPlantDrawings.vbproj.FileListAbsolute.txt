@@ -1,0 +1,14 @@
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.vbprojAssemblyReference.cache
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.Resources.resources
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.vbproj.GenerateResource.cache
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.vbproj.CoreCompileInputs.cache
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\bin\Debug\GetLatestVersionPlantDrawings.dll
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\bin\Debug\GetLatestVersionPlantDrawings.pdb
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\bin\Debug\GetLatestVersionPlantDrawings.xml
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\bin\Debug\GetLatestVersionPlantDrawings.tlb
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.dll
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.xml
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.pdb
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\bin\Debug\EPDM.Interop.epdm.dll
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.vbproj.CopyComplete
+C:\Users\TuckerJohnson\source\repos\GetLatestVersionPlantDrawings\obj\Debug\GetLatestVersionPlantDrawings.MenuCommandPage.resources

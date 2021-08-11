@@ -1,0 +1,13 @@
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\bin\Debug\ShareToFolderAddin.dll
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\bin\Debug\ShareToFolderAddin.pdb
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\bin\Debug\ShareToFolderAddin.xml
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\bin\Debug\EPDM.Interop.epdm.dll
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.vbprojAssemblyReference.cache
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.Resources.resources
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.vbproj.GenerateResource.cache
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.vbproj.CoreCompileInputs.cache
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.vbproj.CopyComplete
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.dll
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.xml
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.pdb
+C:\Users\TuckerJohnson\source\repos\ShareToFolderAddin\obj\Debug\ShareToFolderAddin.MenuCommandPage.resources
