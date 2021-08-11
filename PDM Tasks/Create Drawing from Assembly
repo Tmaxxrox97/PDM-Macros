@@ -1,0 +1,156 @@
+Option Explicit
+Dim swApp As SldWorks.SldWorks
+Dim swModel As SldWorks.ModelDoc2
+Dim swDraw As SldWorks.DrawingDoc
+Dim swDrawing As SldWorks.DrawingDoc
+Dim DrawingTitle As String
+Dim AssemTitle As String
+Dim lErrors             As Long
+Dim lWarnings           As Long
+Dim swSheet As SldWorks.Sheet
+Dim sDrTemplate As String
+Dim lDrSize As Long
+
+Dim sOutputFolder As String
+Dim FileName As String
+Dim FilePath As String
+Dim LogPath As String
+Const ForAppending = 8
+Const TriStateDefault = -2
+
+Sub Log2File(Message As String)
+    Dim oFSO As Object
+    Dim oFile As Object
+    'Dim Logfile As String
+
+    'Create directory if it doesn't exist
+    If Len(Dir("<VaultPath>\Logs\CreateDrawing", vbDirectory)) = 0 Then
+       MkDir "<VaultPath>\Logs\CreateDrawing"
+    End If
+
+    Set oFSO = CreateObject("Scripting.FileSystemObject")
+    Set oFile = oFSO.OpenTextFile("<VaultPath>\Logs\CreateDrawing\<TaskInstanceGuid>.log", ForAppending, TriStateDefault)
+    oFile.WriteLine Message
+    oFile.Close
+End Sub
+
+Sub main()
+   
+    Set swApp = Application.SldWorks
+    swApp.Visible = True
+    
+    Dim comp1Path As String
+    Dim comp2Path As String
+    
+    FilePath = "<Filepath>"
+    'FileName = Split(Mid(FilePath, InStrRev(FilePath, "\") + 1), ".")(0)
+    FileName = Mid(FilePath, InStrRev(FilePath, "\") + 1, InStrRev(FilePath, ".") - InStrRev(FilePath, "\") - 1)
+    Log2File "FilePath " & FilePath
+    Log2File "Filename " & FileName
+    
+    comp2Path = "<Path>" & "\" & FileName & ".SLDASM"
+    comp1Path = "<Path>" & "\" & FileName & ".SLDDRW"
+    Log2File "comp2Path " & comp2Path
+    Log2File "comp1Path " & comp1Path
+    
+    'Open Drawing
+    Log2File "Opening Drawing"
+    Set swDrawing = swApp.OpenDoc6(comp1Path, swDocumentTypes_e.swDocDRAWING, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+    DrawingTitle = swDrawing.GetTitle
+    Log2File "Drawing Name " & DrawingTitle
+    
+    'Save the Drawing
+    Log2File "Saving Drawing " & DrawingTitle
+    Dim swDrawingModel As SldWorks.ModelDoc2
+    Set swDrawingModel = swDrawing
+    swDrawingModel.Save3 swSaveAsOptions_Silent, lErrors, lWarnings
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+    
+    'Close the Drawing
+    Log2File "Closing Drawing " & DrawingTitle
+    Set swDrawing = Nothing
+    swApp.CloseDoc DrawingTitle
+    
+    'Open Drawing
+    Log2File "Opening Drawing"
+    Set swDrawing = swApp.OpenDoc6(comp1Path, swDocumentTypes_e.swDocDRAWING, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+    DrawingTitle = swDrawing.GetTitle
+    Log2File "Drawing Name " & DrawingTitle
+
+    'Open Assembly
+    Log2File "Opening Assembly"
+    'swApp.DocumentVisible False, swDocumentTypes_e.swDocASSEMBLY
+    Set swModel = swApp.OpenDoc6(comp2Path, swDocumentTypes_e.swDocASSEMBLY, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+    AssemTitle = swModel.GetTitle
+    Log2File "Assembly Name " & AssemTitle
+    'swApp.DocumentVisible True, swDocumentTypes_e.swDocASSEMBLY
+    
+    swModel.ViewZoomtofit2
+    swModel.ForceRebuild3 True
+    
+    'Save the Assembly
+    Log2File "Saving Assembly " & AssemTitle
+    swModel.Save3 swSaveAsOptions_Silent, lErrors, lWarnings
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+
+    
+    'Close the Assembly
+    Log2File "Closing Assembly " & AssemTitle
+    Set swModel = Nothing
+    swApp.CloseDoc AssemTitle
+    
+    Set swModel = swApp.OpenDoc6(comp2Path, swDocumentTypes_e.swDocASSEMBLY, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+    Log2File "Assem Title " & swModel.GetTitle
+    
+    sOutputFolder = "<Path>\"
+    Log2File "OutputFolder " & sOutputFolder
+   
+    'sDrTemplate = "<VaultPath>\Shared\Templates\SRCD.drwdot"
+    'Log2File "Template " & sDrTemplate
+    'lDrSize = swDwgPaperSizes_e.swDwgPaperDsize
+       
+    'Set swDraw = swApp.NewDocument(sDrTemplate, lDrSize, 0, 0)
+    'Open Drawing
+    'Log2File "Opening Drawing"
+    'swApp.DocumentVisible False, swDocumentTypes_e.swDocDRAWING
+    'Set swDrawing = swApp.OpenDoc6(comp1Path, swDocumentTypes_e.swDocDRAWING, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+    'Log2File "Errors " & lErrors
+    'Log2File "Warnings " & lWarnings
+    'DrawingTitle = swDrawing.GetTitle
+    'Log2File "Drawing Name " & DrawingTitle
+    'swApp.DocumentVisible True, swDocumentTypes_e.swDocDRAWING
+
+    Dim instance As IView
+    Set instance = swDrawing.CreateDrawViewFromModelView3(comp2Path, "*Top", 0.4318, 0.2794, 0)
+    Dim swView As SldWorks.View
+    swDrawing.ActivateSheet "Sheet1"
+    Set swSheet = swDrawing.GetCurrentSheet
+    swSheet.SetScale 1, 150, False, False
+    Dim swDrawModel As SldWorks.ModelDoc2
+    Set swDrawModel = swDrawing
+    
+    'Add BOM
+    instance.InsertBomTable3 True, 0, 0, swBOMConfigurationAnchorType_e.swBOMConfigurationAnchor_TopRight, 2, "Default", "<VaultPath>\Shared\Templates\BOM_WEIGHTS.sldbomtbt", False
+
+    swDrawModel.ForceRebuild3 False
+    
+    Log2File "Saving Drawing " & DrawingTitle
+    swDrawModel.Save3 swSaveAsOptions_Silent, lErrors, lWarnings
+    'swDrawModel.Extension.SaveAs comp1Path, swSaveAsVersion_e.swSaveAsCurrentVersion, swSaveAsOptions_e.swSaveAsOptions_Silent, Nothing, 0, 0
+    'Log2File "Output " & sOutputFolder + swModel.GetTitle() + ".slddrw"
+    'Save the Drawing
+    
+    'swDrawing.Save3 swSaveAsOptions_Silent, lErrors, lWarnings
+    
+    
+End Sub
