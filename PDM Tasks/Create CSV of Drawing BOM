@@ -1,0 +1,289 @@
+Dim swApp As Object
+Const OUT_FILE_PATH As String = "" 'empty string to save in the model's folder
+Const INCLUDE_HEADER As Boolean = True
+Dim lErrors             As Long
+Dim lWarnings           As Long
+Dim pdmVault As Object
+Dim rev As String
+
+
+Sub main()
+
+    Set swApp = Application.SldWorks
+    swApp.Visible = True
+    
+    Dim FileName As String
+    Dim FilePath As String
+    
+    FilePath = "<Filepath>"
+    FileName = Mid(FilePath, InStrRev(FilePath, "\") + 1, InStrRev(FilePath, ".") - InStrRev(FilePath, "\") - 1)
+    
+    Dim swDraw As SldWorks.DrawingDoc
+    
+    'Open Drawing
+    Set swDraw = swApp.OpenDoc6(FilePath, swDocumentTypes_e.swDocDRAWING, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+    
+    If Not swDraw Is Nothing Then
+        
+        Dim vTables As Variant
+        vTables = FindTables(swDraw, Array(swTableAnnotationType_e.swTableAnnotation_BillOfMaterials))
+        
+        If Not IsEmpty(vTables) Then
+            
+            Dim i As Integer
+            
+            For i = 0 To UBound(vTables)
+                
+                Dim swTable As SldWorks.TableAnnotation
+                Set swTable = vTables(i)
+                
+                If Not swTable Is Nothing Then
+            
+                    Dim vTable As Variant
+                    vTable = GetTableData(swTable, INCLUDE_HEADER)
+                    
+                    GetRev FilePath, "<Path>"
+                    'WriteCsvFile GetExportFilePath(swDraw, swTable.title), vTable
+                    WriteCsvFile GetExportFilePath1(swDraw, swTable.title, FileName), vTable
+                    CheckInandAdd GetExportFilePath1(swDraw, swTable.title, FileName), "<Path>"
+            
+                    GoTo finally_
+            
+                Else
+                    Err.Raise vbError, "", "Table is not selected"
+                End If
+                
+                Debug.Print swTable.title
+                
+            Next
+            
+        End If
+        
+    Else
+        MsgBox "Please open drawing"
+    End If
+    
+catch_:
+    swApp.SendMsgToUser2 Err.Description, swMessageBoxIcon_e.swMbStop, swMessageBoxBtn_e.swMbOk
+finally_:
+
+End Sub
+
+Function FindTables(draw As SldWorks.DrawingDoc, filter As Variant) As Variant
+    
+    Dim swTables() As SldWorks.TableAnnotation
+    Dim isInit As Boolean
+    isInit = False
+    
+    Dim vSheets As Variant
+    
+    vSheets = draw.GetViews()
+    
+    Dim i As Integer
+    
+    For i = 0 To UBound(vSheets)
+        
+        Dim vViews As Variant
+        vViews = vSheets(i)
+        
+        Dim swSheetView As SldWorks.View
+        Set swSheetView = vViews(0)
+        
+        Dim vTableAnns As Variant
+        vTableAnns = swSheetView.GetTableAnnotations
+        
+        If Not IsEmpty(vTableAnns) Then
+            
+            Dim j As Integer
+            
+            For j = 0 To UBound(vTableAnns)
+                
+                Dim swTableAnn As SldWorks.TableAnnotation
+                Set swTableAnn = vTableAnns(j)
+                
+                If FilterContains(swTableAnn.Type, filter) Then
+                    If isInit Then
+                        ReDim Preserve swTables(UBound(swTables) + 1)
+                    Else
+                        ReDim swTables(0)
+                        isInit = True
+                    End If
+                End If
+                
+                Set swTables(UBound(swTables)) = swTableAnn
+                
+            Next
+            
+        End If
+        
+    Next
+    
+    FindTables = swTables
+    
+End Function
+
+Function FilterContains(val As swTableAnnotationType_e, filter As Variant) As Boolean
+    
+    Dim i As Integer
+    
+    For i = 0 To UBound(filter)
+        If val = filter(i) Then
+            FilterContains = True
+            Exit Function
+        End If
+    Next
+    
+    FilterContains = False
+    
+End Function
+
+Function GetExportFilePath(model As SldWorks.ModelDoc2, title As String) As String
+    
+    If OUT_FILE_PATH = "" Then
+        
+        Dim modelPath As String
+        modelPath = model.GetPathName
+        
+        If modelPath = "" Then
+            Err.Raise vbError, "", "Model is not saved. Specify the full path to save a table or save the model"
+        End If
+        
+        GetExportFilePath = "<Path>" & "\" & FileName & ".csv"
+    Else
+        GetExportFilePath = OUT_FILE_PATH
+    End If
+    
+End Function
+Function GetExportFilePath1(model As SldWorks.ModelDoc2, title As String, FileName As String) As String
+    
+    If OUT_FILE_PATH = "" Then
+        
+        GetExportFilePath1 = "<Path>" & "\" & FileName & "-" & title & "-" & rev & ".csv"
+    Else
+        GetExportFilePath1 = OUT_FILE_PATH
+    End If
+    
+End Function
+
+Function GetTableData(tableAnn As SldWorks.TableAnnotation, includeHeader As Boolean) As Variant
+    
+    Dim tableData() As String
+    Dim tableHeader() As String
+        
+    Dim i As Integer
+    Dim j As Integer
+    Dim x As Integer
+    Dim p As Integer
+    Dim q As Integer
+    
+    ReDim Preserve tableHeader(0, tableAnn.ColumnCount - 1)
+        
+    For x = 0 To tableAnn.ColumnCount - 1
+        tableHeader(0, x) = tableAnn.Text(0, x)
+    Next
+    
+    For x = 0 To tableAnn.ColumnCount - 1
+        If tableHeader(0, x) = "QTY." Then
+            q = x
+        End If
+        
+        If tableHeader(0, x) = "PART NUMBER" Then
+            p = x
+        End If
+        
+    Next
+    
+    Dim offset As Integer
+    offset = IIf(INCLUDE_HEADER, 0, 1)
+    
+    For i = 0 + offset To tableAnn.RowCount - 1
+        
+        ReDim Preserve tableData(tableAnn.RowCount - 1 - offset, 1)
+        
+        'For j = 0 To tableAnn.ColumnCount - 1
+        tableData(i - offset, 0) = tableAnn.Text(i, p)
+        tableData(i - offset, 1) = tableAnn.Text(i, q)
+        'Next
+            
+    Next
+        
+    GetTableData = tableData
+    
+End Function
+
+Sub WriteCsvFile(FilePath As String, table As Variant)
+    
+    Dim fileNmb As Integer
+    fileNmb = FreeFile
+    
+    Open FilePath For Output As #fileNmb
+    
+    Dim i As Integer
+    Dim j As Integer
+   
+    For i = 0 To UBound(table, 1)
+        
+        Dim rowContent As String
+        rowContent = ""
+        
+        For j = 0 To UBound(table, 2)
+            Dim cell As String
+            cell = table(i, j)
+            If HasSpecialSymbols(cell) Then
+                cell = """" & ReplaceSpecialSymbols(cell) & """"
+            End If
+            rowContent = rowContent & IIf(j = 0, "", ",") & cell
+        Next
+        
+        Print #fileNmb, rowContent
+        
+    Next
+    
+    Close #fileNmb
+    
+End Sub
+
+Function HasSpecialSymbols(cell As String) As Boolean
+    
+    HasSpecialSymbols = InStr(cell, ",") > 0 Or InStr(cell, vbLf) > 0 Or InStr(cell, vbNewLine) > 0 Or InStr(cell, """") > 0 Or InStr(cell, "-") > 0
+    
+End Function
+
+Function ReplaceSpecialSymbols(cell As String) As String
+    cell = Replace(cell, """", """""")
+    ReplaceSpecialSymbols = cell
+End Function
+
+Sub CheckInandAdd(FilePath As String, FolderPath As String)
+
+    Dim folder As Object
+    Dim file As Object
+    
+    Set pdmVault = CreateObject("ConisioLib.EdmVault")
+
+    pdmVault.LoginAuto "SRC Vault", 0
+    Set folder = pdmVault.GetFolderFromPath(FolderPath)
+    
+    folder.AddFile 0, FilePath, "", 0
+    
+    Set file = pdmVault.GetFileFromPath(FilePath, folder)
+
+    file.UnlockFile 0, ""
+    
+End Sub
+
+Sub GetRev(FilePath As String, FolderPath As String)
+
+    Dim folder As Object
+    Dim file As Object
+    
+    Set pdmVault = CreateObject("ConisioLib.EdmVault")
+
+    pdmVault.LoginAuto "SRC Vault", 0
+    Set folder = pdmVault.GetFolderFromPath(FolderPath)
+    
+    Set file = pdmVault.GetFileFromPath(FilePath, folder)
+    
+    rev = file.CurrentRevision
+        
+End Sub
