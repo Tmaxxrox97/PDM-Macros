@@ -1,0 +1,28 @@
+Option Explicit
+
+Dim swApp As Object
+Dim FILE_PATH As String
+Dim FOLDER_PATH As String
+Dim pdmVault As Object
+Dim file As Object
+Dim folder As Object
+
+Sub main()
+
+    Set swApp = Application.SldWorks
+    FILE_PATH = "<Filepath>"
+    FOLDER_PATH = "<Path>"
+
+    Set pdmVault = CreateObject("ConisioLib.EdmVault")
+
+    pdmVault.LoginAuto "SRC Vault", 0
+    
+    If pdmVault.IsLoggedIn Then
+        Set folder = pdmVault.GetFolderFromPath(FOLDER_PATH)
+        Set file = pdmVault.GetFileFromPath(FILE_PATH, folder)
+        file.GetFileCopy 0, "", 0, 4, ""
+    Else
+        Err.Raise vbError, "User is not logged in to the vault"
+    End If
+    
+End Sub
