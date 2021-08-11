@@ -1,0 +1,118 @@
+Option Explicit
+Dim swApp As SldWorks.SldWorks
+Dim swAssy As SldWorks.AssemblyDoc
+Dim swPart As SldWorks.ModelDoc2
+Dim lErrors             As Long
+Dim lWarnings           As Long
+Dim boolstatus          As Boolean
+Dim assemTitle As String
+Dim partTitle As String
+Dim FileName As String
+Dim FilePath As String
+Dim LogPath As String
+Const ForAppending = 8
+Const TriStateDefault = -2
+
+Sub Log2File(Message As String)
+    Dim oFSO As Object
+    Dim oFile As Object
+    'Dim Logfile As String
+
+    If Len(Dir("<VaultPath>\Logs\Add_File", vbDirectory)) = 0 Then
+       MkDir "<VaultPath>\Logs\Add_File"
+    End If
+
+    Set oFSO = CreateObject("Scripting.FileSystemObject")
+    Set oFile = oFSO.OpenTextFile("<VaultPath>\Logs\Add_File\<TaskInstanceGuid>.log", ForAppending, TriStateDefault)
+    oFile.WriteLine Message
+    oFile.Close
+End Sub
+
+Sub main()
+    
+    Set swApp = Application.SldWorks
+    
+    Dim comp1Path As String
+    Dim comp2Path As String
+    
+    FilePath = "<Filepath>"
+    'FileName = Split(Mid(FilePath, InStrRev(FilePath, "\") + 1), ".")(0)
+    FileName = Mid(FilePath, InStrRev(FilePath, "\") + 1, InStrRev(FilePath, ".") - InStrRev(FilePath, "\") - 1)
+    'MsgBox "Macro file path name = " & FileName & ".sldasm"
+    Log2File "FilePath " & FilePath
+    Log2File "Filename " & Filename
+    
+    'comp2Path = swApp.GetCurrentMacroPathFolder() & "\" & FileName & ".SLDASM"
+    'comp1Path = swApp.GetCurrentMacroPathFolder() & "\" & FileName & ".SLDPRT"
+    
+    comp1Path = "<Path>" & "\" & FileName & ".SLDPRT"
+    comp2Path = "<Path>" & "\" & FileName & ".SLDASM"
+    Log2File "comp2Path " & comp2Path
+    Log2File "comp1Path " & comp1Path
+
+    Log2File "Opening Assembly"
+    Set swAssy = swApp.OpenDoc6(comp2Path, swDocumentTypes_e.swDocASSEMBLY, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+    assemTitle = swAssy.GetTitle
+    Log2File "Assembly Name " & assemTitle
+	
+    'Open Part
+    Log2File "Opening Part"
+    'swApp.DocumentVisible False, swDocumentTypes_e.swDocPART
+    Set swPart = swApp.OpenDoc6(comp1Path, swDocumentTypes_e.swDocPART, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+    partTitle = swPart.GetTitle
+    Log2File "Part Name " & partTitle
+    'swApp.DocumentVisible True, swDocumentTypes_e.swDocPART
+	
+    'Save the Part
+    Log2File "Saving Part " & partTitle
+    swPart.Save3 swSaveAsOptions_Silent, lErrors, lWarnings
+    Log2File "Errors " & lErrors
+    Log2File "Warnings " & lWarnings
+	
+    'Close the Part
+    Log2File "Closing Part " & partTitle
+    Set swPart = Nothing
+    swApp.CloseDoc partTitle
+        
+    If Not swAssy Is Nothing Then
+        
+        Dim swComp As SldWorks.Component2
+        
+        'Open Part
+        Log2File "Opening Part"
+        'swApp.DocumentVisible False, swDocumentTypes_e.swDocPART
+        Set swPart = swApp.OpenDoc6(comp1Path, swDocumentTypes_e.swDocPART, swOpenDocOptions_e.swOpenDocOptions_Silent, "", lErrors, lWarnings)
+        Log2File "Errors " & lErrors
+        Log2File "Warnings " & lWarnings
+        partTitle = swPart.GetTitle
+        Log2File "Part Name " & partTitle
+        'swApp.DocumentVisible True, swDocumentTypes_e.swDocPART
+
+        'Add Part to Assembly
+        Log2File "Adding Part to Assem"
+        'swApp.ActivateDoc2 assemTitle, True, lErrors
+        Set swComp = swAssy.AddComponent4(comp1Path, "Default", 0#, 0#, 0#)
+        Log2File "Added Part to Assem"
+
+        'Save Assembly with part added
+        Log2File "Saving Assem"
+        swAssy.Save3 swSaveAsOptions_Silent, lErrors, lWarnings
+        Log2File "Errors " & lErrors
+        Log2File "Warnings " & lWarnings
+		
+        
+         'Open part and Set as Active document
+         'swApp.OpenDoc6 comp1Path, swDocumentTypes_e.swDocPART, swOpenDocOptions_e.swOpenDocOptions_Silent, "", 0, 0
+         'swApp.ActivateDoc2 partTitle, True, lErrors
+         
+    Else
+        
+        MsgBox "Please open or create assembly"
+        
+    End If
+    swApp.DocumentVisible True, swDocumentTypes_e.swDocASSEMBLY
+End Sub
