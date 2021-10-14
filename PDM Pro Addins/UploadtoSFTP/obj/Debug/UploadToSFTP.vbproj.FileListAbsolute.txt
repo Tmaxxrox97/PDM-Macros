@@ -1,0 +1,14 @@
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\bin\Debug\UploadToSFTP.dll
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\bin\Debug\UploadToSFTP.pdb
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\bin\Debug\UploadToSFTP.xml
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.vbproj.AssemblyReference.cache
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.MenuCommandPage.resources
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.Resources.resources
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.vbproj.GenerateResource.cache
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.vbproj.CoreCompileInputs.cache
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.vbproj.CopyComplete
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.dll
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.xml
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\obj\Debug\UploadToSFTP.pdb
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\bin\Debug\Renci.SshNet.dll
+C:\Users\TuckerJohnson\Source\Repos\Tmaxxrox97\PDM-Macros\PDM Pro Addins\UploadtoSFTP\bin\Debug\Renci.SshNet.xml
