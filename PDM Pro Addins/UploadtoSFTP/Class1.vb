@@ -208,36 +208,42 @@ Public Class UploadToSFTP
 
         If vFilePaths.Length > 0 Then
 
+            Dim serverpath As String
+            Dim username As String
+            Dim password As String
+
+            serverpath = inst.GetValEx("ServerPath")
+            username = inst.GetValEx("Username")
+            password = inst.GetValEx("Password")
+
+            Dim client As New SftpClient(serverpath, username, password)
+            client.Connect()
+
             Dim i As Integer
 
             For i = 0 To UBound(vFilePaths)
 
                 Dim filename As String
                 Dim filepath As String
-                Dim serverpath As String
-                Dim username As String
-                Dim password As String
                 Dim remote As String
 
                 filepath = vFilePaths(i).mbsStrData1
 
                 filename = Right(filepath, Len(filepath) - InStrRev(filepath, "\"))
 
-                serverpath = inst.GetValEx("ServerPath")
-                username = inst.GetValEx("Username")
-                password = inst.GetValEx("Password")
                 remote = inst.GetValEx("Remote") + filename
 
                 inst.SetProgressPos(7, filename)
-
-                Dim client As SftpClient = New SftpClient(serverpath, username, password)
-                client.Connect()
 
                 Using stream As Stream = File.OpenRead(filepath)
                     client.UploadFile(stream, remote)
                 End Using
 
+
+
             Next
+
+            client.Disconnect()
 
         End If
 
