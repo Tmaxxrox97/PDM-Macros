@@ -226,7 +226,7 @@ Public Class UploadToSFTP
                 serverpath = inst.GetValEx("ServerPath")
                 username = inst.GetValEx("Username")
                 password = inst.GetValEx("Password")
-                remote = inst.GetValEx("Remote") + "\" + filename
+                remote = inst.GetValEx("Remote") + filename
 
                 inst.SetProgressPos(7, filename)
 
