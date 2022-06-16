@@ -20,7 +20,7 @@ Public Class UploadToSFTP
             poInfo.mbsCompany = "Safety Rail Company"
             poInfo.mbsDescription =
               "Uploads Files to specified SFTP site"
-            poInfo.mlAddInVersion = 1
+            poInfo.mlAddInVersion = 2
 
             'Minimum SOLIDWORKS PDM Professional version
             'needed for VB.Net Task Add-Ins is 10.0
@@ -212,6 +212,9 @@ Public Class UploadToSFTP
             Dim username As String
             Dim password As String
 
+            Dim index As Integer
+            Dim vParts As Object
+
             serverpath = inst.GetValEx("ServerPath")
             username = inst.GetValEx("Username")
             password = inst.GetValEx("Password")
@@ -231,6 +234,14 @@ Public Class UploadToSFTP
 
                 filename = Right(filepath, Len(filepath) - InStrRev(filepath, "\"))
 
+                vParts = LoadCSV("C:\SRC Vault\Shared\Macros\UploadtoSFTP.csv")
+
+                index = LoopThrough2DArray(vParts, filename)
+
+                If Index <> 0 Then
+                    GoTo LastLine
+                End If
+
                 remote = inst.GetValEx("Remote") + filename
 
                 inst.SetProgressPos(7, filename)
@@ -239,7 +250,7 @@ Public Class UploadToSFTP
                     client.UploadFile(stream, remote)
                 End Using
 
-
+LastLine:
 
             Next
 
@@ -248,5 +259,69 @@ Public Class UploadToSFTP
         End If
 
     End Sub
+
+    Private Function LoadCSV(file_name As String) As Object
+        Dim whole_file As String
+        Dim lines As Object
+        Dim one_line As Object
+        Dim num_rows As Long
+        Dim num_cols As Long
+        Dim the_array(1, 1) As Object
+        Dim R As Long
+        Dim C As Long
+
+        Using MyReader As New Microsoft.VisualBasic.FileIO.TextFieldParser(file_name)
+
+            whole_file = MyReader.ReadToEnd
+
+        End Using
+
+        lines = Split(whole_file, vbCrLf)
+
+        ' Dimension the array.
+        num_rows = UBound(lines)
+        one_line = Split(lines(0), ",")
+        num_cols = UBound(one_line)
+        ReDim the_array(num_rows, num_cols)
+
+        ' Copy the data into the array.
+        For R = 0 To num_rows
+            If Len(lines(R)) > 0 Then
+                one_line = Split(lines(R), ",")
+                For C = 0 To num_cols
+                    the_array(R, C) = one_line(C)
+                Next C
+            End If
+        Next R
+
+        ' Prove we have the data loaded.
+        For R = 0 To num_rows
+            For C = 0 To num_cols
+                Debug.Print(the_array(R, C) & "|")
+            Next C
+            Debug.Print("")
+        Next R
+        Debug.Print("=======")
+
+        Return the_array
+
+    End Function
+
+    Private Function LoopThrough2DArray(varArray As Object, strFind As String) As Integer
+        'declare variables for the loop
+        Dim i As Long
+        'loop for the first dimension
+        For i = LBound(varArray, 1) To UBound(varArray, 1)
+            'if we find the value, then msgbox to say that we have the value and exit the function
+            If varArray(i, 0) = strFind Then
+                Return i
+                Exit Function
+            End If
+        Next i
+        If i > UBound(varArray, 1) Then
+            i = 0
+        End If
+        Return i
+    End Function
 
 End Class
