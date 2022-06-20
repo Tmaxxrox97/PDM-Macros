@@ -1,0 +1,74 @@
+Dim swApp As Object
+
+Dim Part As Object
+Dim boolstatus As Boolean
+Dim longstatus As Long, longwarnings As Long
+Dim FileName As String
+Dim FilePath As String
+Dim extension As String
+Dim docType As Integer
+
+Sub main()
+
+    Set swApp = Application.SldWorks
+    swApp.Visible = True
+
+    FilePath = "<Filepath>"
+    'FilePath = "C:\SRC Vault\SRC Parts\420709.SLDPRT"
+    FileName = Mid(FilePath, InStrRev(FilePath, "\") + 1, InStrRev(FilePath, ".") - InStrRev(FilePath, "\") - 1)
+    extension = Right(FilePath, Len(FilePath) - InStrRev(FilePath, "."))
+
+    Dim comp1Path As String
+
+    ' Determine type of SolidWorks file based on file extension
+    If LCase(Right(FilePath, 7)) = ".sldprt" Or LCase(Right(FilePath, 4)) = ".prt" Then
+        docType = swDocPART
+    ElseIf LCase(Right(FilePath, 7)) = ".sldasm" Or LCase(Right(FilePath, 4)) = ".asm" Then
+        docType = swDocASSEMBLY
+    ElseIf LCase(Right(FilePath, 7)) = ".slddrw" Or LCase(Right(FilePath, 4)) = ".drw" Then
+        docType = swDocDRAWING
+    End If
+    
+    Set Part = swApp.OpenDoc6(FilePath, docType, 3, "", longstatus, longwarnings)
+
+    'comp1Path = "C:\SRC Vault\SRC Parts" & "\" & FileName & "M.SLDDRW"
+    comp1Path = "<VaultPath>\Marketing Drawings" & "\" & FileName & "M.SLDDRW"
+
+    ' Open
+    Dim swAssembly As Object
+    Set swAssembly = Part
+
+    ' New Document
+    Dim swSheetWidth As Double
+    swSheetWidth = 0.2794
+    Dim swSheetHeight As Double
+    swSheetHeight = 0.2159
+    'Set Part = swApp.NewDocument("C:\SRC Vault\Shared\Templates\Marketing_Drawing.drwdot", 0, swSheetWidth, swSheetHeight)
+    Set Part = swApp.NewDocument("<VaultPath>\Shared\Templates\Marketing_Drawing.drwdot", 0, swSheetWidth, swSheetHeight)
+    Dim swDrawing As DrawingDoc
+    Set swDrawing = Part
+    Dim swSheet As Sheet
+    Set swSheet = swDrawing.GetCurrentSheet()
+    'swSheet.SetProperties2 12, 12, 1, 20, False, swSheetWidth, swSheetHeight, True
+    'swSheet.SetTemplateName "C:\ProgramData\SolidWorks\SolidWorks 2011\lang\english\sheetformat\a - landscape.slddrt"
+    'swSheet.ReloadTemplate True
+
+    Dim instance As IView
+    Set instance = swDrawing.CreateDrawViewFromModelView3(FilePath, "*Front", 0.085725, 0.0762, 0)
+    instance.SetDisplayMode3 False, swSHADED, False, True
+
+    Set instance = swDrawing.CreateDrawViewFromModelView3(FilePath, "*Isometric", 0.2159, 0.1524, 0)
+    instance.SetDisplayMode3 False, swSHADED, False, True
+
+    swDrawing.ActivateSheet "Sheet1"
+    Dim swDrawModel As SldWorks.ModelDoc2
+    Set swDrawModel = swDrawing
+    swDrawModel.ClearSelection2 True
+
+    Set swExtension = swDrawModel.extension
+
+    'swExtension.SaveAs "C:\SRC Vault\SRC Parts\400008M.SLDDRW", swSaveAsCurrentVersion, swSaveAsOptions_Silent, Nothing, longstatus, longwarnings
+    boolstatus = swExtension.SaveAs(comp1Path, swSaveAsCurrentVersion, swSaveAsOptions_Silent, Nothing, longstatus, longwarnings)
+
+End Sub
+
