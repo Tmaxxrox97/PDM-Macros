@@ -1,0 +1,109 @@
+Option Explicit
+
+
+
+Sub main()
+    
+    Dim LayerName As String
+    LayerName = "Hidden"
+    Dim swApp As SldWorks.SldWorks
+    Dim swDrawing As SldWorks.DrawingDoc
+    Dim swLayerMgr As SldWorks.LayerMgr
+    Dim NewLayer As Integer
+    'Dim TblsLayer As Integer
+    'Dim DimsLayer As Integer
+    'Dim TitleBlockLayer As Integer
+    Dim swAnn As SldWorks.Annotation
+    Dim vLayerArr As Variant
+    Dim vLayer As Variant
+    Dim swLayer As SldWorks.Layer
+    Dim swSheet As SldWorks.Sheet
+    Set swApp = Application.SldWorks
+    Set swDrawing = swApp.ActiveDoc
+    Set swLayerMgr = swDrawing.GetLayerManager
+    
+    Dim vSheetNames As Variant
+    vSheetNames = swDrawing.GetSheetNames
+    
+    
+    vLayerArr = swLayerMgr.GetLayerList
+    
+    For Each vLayer In vLayerArr
+    
+        If vLayer = LayerName Then
+            GoTo Exists
+        End If
+    
+    Next
+    
+    NewLayer = swLayerMgr.AddLayer(LayerName, "Hidden Layer", 968742753, 0, 1)
+    vLayer = LayerName
+    
+Exists:
+
+    Dim i As Integer
+
+    For i = 0 To UBound(vSheetNames)
+    
+        Dim sheetName As String
+        sheetName = CStr(vSheetNames(i))
+
+        Set swSheet = swDrawing.Sheet(sheetName)
+
+        Dim vViews As Variant
+    
+        vViews = swSheet.GetViews
+    
+        Dim j As Integer
+    
+        For j = 0 To UBound(vViews)
+        
+            Dim swView As SldWorks.View
+            Set swView = vViews(j)
+        
+        'Start Add Dimensions to Hidden Layer
+            Dim swDispDim As SldWorks.DisplayDimension
+            Set swDispDim = swView.GetFirstDisplayDimension5()
+        
+            While Not swDispDim Is Nothing
+            
+                Set swAnn = swDispDim.GetAnnotation
+                swAnn.Layer = LayerName
+            
+                Set swDispDim = swDispDim.GetNext5
+        
+            Wend
+        'End Add Dimensions to Hidden Layer
+    
+        'Start Add Weld Callouts to Hidden Layer
+            Dim swWeldCallout As Object
+            Set swWeldCallout = swView.GetFirstWeldSymbol()
+        
+            While Not swWeldCallout Is Nothing
+            
+                Set swAnn = swWeldCallout.GetAnnotation
+                swAnn.Layer = LayerName
+            
+                Set swWeldCallout = swWeldCallout.GetNext
+        
+            Wend
+        
+    
+        'End Add Well Callouts to Hidden Layer
+    
+        'Start Add Annotations to Hidden Layer
+    
+    
+        'End Add Annotations to Hidden Layer
+        
+        Next
+        
+    Next
+    
+    Set swLayer = swLayerMgr.GetLayer(vLayer)
+    
+        ' Toggle layer off
+
+        swLayer.Visible = False
+
+End Sub
