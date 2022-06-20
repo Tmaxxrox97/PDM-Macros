@@ -1,0 +1,122 @@
+Option Explicit
+
+Dim swApp As Object
+Dim PRP_NAME As String
+Dim warnings As Long
+Dim errors As Long
+Dim FOLDER_PATH As String
+Dim pdmVault As Object
+Dim file As Object
+Dim folder As Object
+Dim docFileName As String
+Dim docType As Integer
+
+
+Sub main()
+
+    Set swApp = Application.SldWorks
+    Dim swModel As SldWorks.ModelDoc2
+    
+    swApp.Visible = True
+    
+    docFileName = "<Filepath>"
+    'docFileName = "C:\SRC Vault\SRC Parts\400009.sldasm"
+    FOLDER_PATH = "<Path>"
+    'FOLDER_PATH = "C:\SRC Vault\SRC Parts"
+
+    Set pdmVault = CreateObject("ConisioLib.EdmVault")
+
+    pdmVault.LoginAuto "SRC Vault", 0
+    
+    If pdmVault.IsLoggedIn Then
+        Set folder = pdmVault.GetFolderFromPath(FOLDER_PATH)
+        Set file = pdmVault.GetFileFromPath(docFileName, folder)
+        If file.IsLocked = False Then
+            file.LockFile folder.ID, 0, 0
+        End If
+        
+    Else
+        Err.Raise vbError, "User is not logged in to the vault"
+    End If
+    
+    ' Determine type of SolidWorks file based on file extension
+    If LCase(Right(docFileName, 7)) = ".sldprt" Or LCase(Right(docFileName, 4)) = ".prt" Then
+        docType = swDocPART
+    ElseIf LCase(Right(docFileName, 7)) = ".sldasm" Or LCase(Right(docFileName, 4)) = ".asm" Then
+        docType = swDocASSEMBLY
+    ElseIf LCase(Right(docFileName, 7)) = ".slddrw" Or LCase(Right(docFileName, 4)) = ".drw" Then
+        docType = swDocDRAWING
+    End If
+    
+    Set swModel = swApp.OpenDoc6(docFileName, docType, swOpenDocOptions_Silent, "", errors, warnings)
+        
+    
+    
+    If Not swModel Is Nothing Then
+        
+        Dim finish As String
+        Dim material As String
+        
+        'finish = InputBox("Specify the Finish")
+        'material = InputBox("Specify the Material")
+
+        finish = "POWDER COAT YELLOW"
+        material = "1.625 X 0.065W HRPO STEEL TUBE"
+
+        'finish = "HOT DIPPED GALVANIZED"
+        'material = "1.625 X 0.065W HRPO STEEL TUBE"
+
+        'Finish
+        
+        PRP_NAME = "Finish"
+        
+        SetGeneralProperty swModel, PRP_NAME, finish, swCustomInfoType_e.swCustomInfoText
+        SetConfigurationSpecificProperty swModel, PRP_NAME, finish, swCustomInfoType_e.swCustomInfoText
+        
+        'Material
+        
+        PRP_NAME = "Material"
+        
+        SetGeneralProperty swModel, PRP_NAME, material, swCustomInfoType_e.swCustomInfoText
+        SetConfigurationSpecificProperty swModel, PRP_NAME, material, swCustomInfoType_e.swCustomInfoText
+        
+        swModel.Save3 swSaveAsOptions_Silent, errors, warnings
+        
+    End If
+
+End Sub
+
+Sub SetGeneralProperty(model As SldWorks.ModelDoc2, prpName As String, prpVal As String, prpType As swCustomInfoType_e)
+    
+    SetProperty model.Extension.CustomPropertyManager(""), prpName, prpVal, prpType
+    
+End Sub
+
+Sub SetConfigurationSpecificProperty(model As SldWorks.ModelDoc2, prpName As String, prpVal As String, prpType As swCustomInfoType_e)
+    
+    Dim vNames As Variant
+    vNames = model.GetConfigurationNames()
+    
+    Dim i As Integer
+        
+    For i = 0 To UBound(vNames)
+        
+        Dim confName As String
+        confName = vNames(i)
+        
+        SetProperty model.Extension.CustomPropertyManager(confName), prpName, prpVal, prpType
+        
+    Next
+    
+End Sub
+
+Sub SetProperty(custPrpMgr As SldWorks.CustomPropertyManager, prpName As String, prpVal As String, Optional prpType As swCustomInfoType_e = swCustomInfoType_e.swCustomInfoText)
+    
+    Dim res As Long
+    res = custPrpMgr.Add3(prpName, prpType, prpVal, swCustomPropertyAddOption_e.swCustomPropertyReplaceValue)
+    
+    If res <> swCustomInfoAddResult_e.swCustomInfoAddResult_AddedOrChanged Then
+        Err.Raise vbError, "", "Failed to set custom property. Error code: " & res
+    End If
+    
+End Sub
