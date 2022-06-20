@@ -1,0 +1,276 @@
+Dim swApp As SldWorks.SldWorks
+Option Explicit
+
+Sub main()
+
+    Set swApp = Application.SldWorks
+    
+    Dim swModel As SldWorks.ModelDoc2
+    Dim swModelDocExt As SldWorks.ModelDocExtension
+    Dim swDraw As SldWorks.DrawingDoc
+    Dim swSelMgr As SldWorks.SelectionMgr
+    Dim vViews As Variant
+    
+    Set swModel = swApp.ActiveDoc
+    
+    Set swModelDocExt = swModel.Extension
+    swModelDocExt.StartRecordingUndoObject
+    
+    If Not swModel Is Nothing Then
+        
+        Dim swView As SldWorks.view
+        Set swView = swModel.SelectionManager.GetSelectedObjectsDrawingView2(1, -1)
+        Set swDraw = swModel
+        Set swSelMgr = swModel.SelectionManager
+        
+        If swView Is Nothing Then
+    
+            Dim swSheet As SldWorks.Sheet
+    
+            Set swSheet = swDraw.GetCurrentSheet()
+            
+            vViews = swSheet.GetViews()
+            
+            If IsEmpty(vViews) Then
+    
+                MsgBox "Please add a Drawing View"
+                GoTo EndLine
+                
+            Else
+            
+                 Set swView = vViews(0)
+                
+            End If
+            
+        End If
+    Else
+        MsgBox "Please open model"
+        GoTo EndLine
+    End If
+        
+    Dim vComps As Variant
+    vComps = swView.GetVisibleComponents()
+    
+    Dim CSV As String
+    Dim vParts As Variant
+    CSV = "C:\SRC Vault\Shared\Macros\"
+    
+    vParts = test(CSV)
+    
+    Dim vBubbled As Variant
+    Dim vBubbledSize As Integer
+    ReDim vBubbled(1)
+    
+    
+    Dim i As Integer
+    Dim j As Integer
+    Dim index As Integer
+    Dim swName As String
+    Dim swNameInstance As String
+    
+    For i = 0 To UBound(vComps)
+        
+        Dim swComp As SldWorks.Component2
+        Set swComp = vComps(i)
+        
+        swName = swComp.Name2
+        
+        swName = Mid(swName, InStr(swName, "/") + 1)
+        
+        If InStr(swName, "/") <> 0 Then
+            swNameInstance = Left(swName, InStr(swName, "/") - 1)
+        Else
+            swNameInstance = swName
+        End If
+        
+        index = LoopThrough1DArray(vBubbled, swNameInstance)
+        
+        If index = 0 Then
+            vBubbledSize = UBound(vBubbled) + 1
+            ReDim Preserve vBubbled(1 To vBubbledSize)
+            vBubbled(vBubbledSize) = swNameInstance
+        Else
+            GoTo LastLine
+        End If
+
+        swName = Left(swName, InStr(1, swName, "-") - 1)
+        index = LoopThrough2DArray(vParts, swName)
+        
+        If index <> 0 Then
+            GoTo LastLine
+        End If
+        
+        Dim vEdges As Variant
+        vEdges = swView.GetVisibleEntities2(swComp, swViewEntityType_e.swViewEntityType_Edge)
+
+        Dim swEdge As SldWorks.edge
+        Set swEdge = vEdges(0)
+               
+        Dim swEnt As SldWorks.Entity
+        Set swEnt = swEdge
+        
+        Dim swSelData As SldWorks.SelectData
+        Set swSelData = swSelMgr.CreateSelectData
+        swSelData.view = swView
+        
+        swEnt.Select4 False, swSelData
+        
+        Dim swBomBalloonParams As SldWorks.BalloonOptions
+
+        Set swBomBalloonParams = swModel.Extension.CreateBalloonOptions()
+            
+        Dim swBalloonNote As SldWorks.Note
+        
+        Set swBalloonNote = swModel.Extension.InsertBOMBalloon2(swBomBalloonParams)
+        
+        'Dim swAnn As SldWorks.Annotation
+        'Set swAnn = swBalloonNote.GetAnnotation
+    
+        'Dim vPos As Variant
+        'vPos = CalculateBaloonPosition(swLongestEdge, swView)
+        
+        'swAnn.SetLeaderAttachmentPointAtIndex 0, vPos(0), vPos(1), 0
+        
+        'swAnn.SetPosition2 vPos(0) + 0.01, vPos(1) + 0.01, 0
+LastLine:
+    Next
+EndLine:
+    swModelDocExt.FinishRecordingUndoObject2 "API Undo AutoBubble", False
+End Sub
+
+Function CalculateBaloonPosition(edge As SldWorks.edge, view As SldWorks.view) As Variant
+    
+    Dim swEdge As IEdge
+    Set swEdge = edge
+    
+    Dim swCurve As SldWorks.Curve
+    Set swCurve = edge.GetCurve
+        
+    Dim swMathUtils As SldWorks.MathUtility
+    Set swMathUtils = swApp.GetMathUtility
+    
+    Dim swVertex As Vertex
+        
+    Dim vStartPt As Variant
+    Dim vEndPt As Variant
+    
+    swEdge.Display 3, 0#, 1#, 0#, True
+    
+    swVertex = edge.IGetStartVertex()
+        
+    vStartPt = swVertex.GetPoint
+    
+    swVertex = edge.IGetEndVertex()
+    
+    vEndPt = swVertex.GetPoint
+    
+    Dim dPt(2) As Double
+    
+    dPt(0) = (vEndPt(0) + vStartPt(0)) / 2
+    dPt(1) = (vEndPt(1) + vStartPt(1)) / 2
+    dPt(2) = (vEndPt(2) + vStartPt(2)) / 2
+    
+    Dim swMathPt As SldWorks.MathPoint
+    Set swMathPt = swMathUtils.CreatePoint(dPt)
+
+    Dim swTransform As SldWorks.MathTransform
+    Set swTransform = view.ModelToViewTransform
+
+    Set swMathPt = swMathPt.MultiplyTransform(swTransform)
+    
+    Dim vPt As Variant
+    vPt = swMathPt.ArrayData
+    
+    vPt(0) = CDbl(vPt(0))
+    vPt(1) = CDbl(vPt(1))
+    vPt(2) = CDbl(vPt(2))
+    
+    CalculateBaloonPosition = vPt
+    
+End Function
+
+Function LoopThrough2DArray(varArray As Variant, strFind As String) As Integer
+'declare variables for the loop
+   Dim i As Long
+'loop for the first dimension
+   For i = LBound(varArray, 1) To UBound(varArray, 1)
+'if we find the value, then msgbox to say that we have the value and exit the function
+         If varArray(i, 0) = strFind Then
+            LoopThrough2DArray = i
+            Exit Function
+         End If
+   Next i
+        If i > UBound(varArray, 1) Then
+            i = 0
+        End If
+   LoopThrough2DArray = i
+End Function
+
+Function LoopThrough1DArray(varArray As Variant, strFind As String) As Integer
+'declare variables for the loop
+   Dim i As Long
+'loop for the first dimension
+   For i = LBound(varArray) To UBound(varArray)
+'if we find the value, then msgbox to say that we have the value and exit the function
+         If varArray(i) = strFind Then
+            LoopThrough1DArray = i
+            Exit Function
+         End If
+   Next i
+        If i > UBound(varArray) Then
+            i = 0
+        End If
+   LoopThrough1DArray = i
+End Function
+
+Function test(file_name As String) As Variant
+Dim fnum As Integer
+Dim whole_file As String
+Dim lines As Variant
+Dim one_line As Variant
+Dim num_rows As Long
+Dim num_cols As Long
+Dim the_array() As Variant
+Dim R As Long
+Dim C As Long
+
+    If Right$(file_name, 1) <> "\" Then file_name = _
+        file_name & "\"
+    file_name = file_name & "autoballoon.csv"
+
+    ' Load the file.
+    fnum = FreeFile
+    Open file_name For Input As fnum
+    whole_file = Input$(LOF(fnum), #fnum)
+    Close fnum
+
+    ' Break the file into lines.
+    lines = Split(whole_file, vbCrLf)
+
+    ' Dimension the array.
+    num_rows = UBound(lines)
+    one_line = Split(lines(0), ",")
+    num_cols = UBound(one_line)
+    ReDim the_array(num_rows, num_cols)
+
+    ' Copy the data into the array.
+    For R = 0 To num_rows
+        If Len(lines(R)) > 0 Then
+            one_line = Split(lines(R), ",")
+            For C = 0 To num_cols
+                the_array(R, C) = one_line(C)
+            Next C
+        End If
+    Next R
+
+    ' Prove we have the data loaded.
+    For R = 0 To num_rows
+        For C = 0 To num_cols
+            Debug.Print the_array(R, C) & "|";
+        Next C
+        Debug.Print
+    Next R
+    Debug.Print "======="
+    
+    test = the_array
+End Function
