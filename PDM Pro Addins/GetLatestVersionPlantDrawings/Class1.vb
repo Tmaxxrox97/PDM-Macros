@@ -18,7 +18,7 @@ Public Class SharedFolderGetLatestVersionTask
             poInfo.mbsCompany = "Safety Rail Company"
             poInfo.mbsDescription =
               "Task Addin that gets the latest version of files in a specified shared Folder"
-            poInfo.mlAddInVersion = 3
+            poInfo.mlAddInVersion = 4
 
             'Minimum SOLIDWORKS PDM Professional version
             'needed for VB.Net Task Add-Ins is 10.0
@@ -259,44 +259,44 @@ Public Class SharedFolderGetLatestVersionTask
                     'Shared file does exist
                     'Check to see if its ID matches the original file
                     'If different wait until its the same or 60 seconds then get latest
+                    'If vault.GetFileFromPath(filepathshared, pdmFolder).ID = vault.GetFileFromPath(filepathcurrent, pdmFolder).ID Then
+                    'Files are the same so Get the latest version
+                    'pdmFolder = vault.GetFolderFromPath(PLANT_DRAWINGS)
+                    'pdmFile = vault.GetFileFromPath(filepathshared, pdmFolder)
+
+                    'pdmSelItems(i).mlDocID = pdmFile.ID
+                    'pdmSelItems(i).mlProjID = pdmFolder.ID
+
+                    'inst.SetProgressPos(7, filename)
+                    'Else
+                    'Files are not the same so wait then get the latest
+
+                    Dim x As Integer = 0
+                    Do Until x > 60 'OrElse vault.GetFileFromPath(filepathshared, pdmFolder).ID = vault.GetFileFromPath(filepathcurrent, pdmFolder).ID
+
+                        System.Threading.Thread.Sleep(1000)
+                        x += 1
+                        inst.SetProgressPos(5, "Task is waiting...")
+                        'Handle Cancelling the task
+                        If inst.GetStatus() = EdmTaskStatus.EdmTaskStat_CancelPending Then
+                            inst.SetStatus(EdmTaskStatus.EdmTaskStat_DoneCancelled)
+                            Exit Sub
+                        End If
+
+                        'Handle Pausing the task
+                        If inst.GetStatus() = EdmTaskStatus.EdmTaskStat_SuspensionPending Then
+                            inst.SetStatus(EdmTaskStatus.EdmTaskStat_Suspended)
+                            While inst.GetStatus() = EdmTaskStatus.EdmTaskStat_Suspended
+                                System.Threading.Thread.Sleep(1000)
+                            End While
+                            If inst.GetStatus() = EdmTaskStatus.EdmTaskStat_ResumePending Then
+                                inst.SetStatus(EdmTaskStatus.EdmTaskStat_Running)
+                            End If
+                        End If
+
+                    Loop
+
                     If vault.GetFileFromPath(filepathshared, pdmFolder).ID = vault.GetFileFromPath(filepathcurrent, pdmFolder).ID Then
-                        'Files are the same so Get the latest version
-                        pdmFolder = vault.GetFolderFromPath(PLANT_DRAWINGS)
-                        pdmFile = vault.GetFileFromPath(filepathshared, pdmFolder)
-
-                        pdmSelItems(i).mlDocID = pdmFile.ID
-                        pdmSelItems(i).mlProjID = pdmFolder.ID
-
-                        inst.SetProgressPos(7, filename)
-                    Else
-                        'Files are not the same so wait then get the latest
-
-                        Dim x As Integer = 0
-                        Do Until x > 60 OrElse vault.GetFileFromPath(filepathshared, pdmFolder).ID = vault.GetFileFromPath(filepathcurrent, pdmFolder).ID
-
-                            System.Threading.Thread.Sleep(1000)
-                            x += 1
-                            inst.SetProgressPos(5, "Task is waiting until files are the same.")
-                            'Handle Cancelling the task
-                            If inst.GetStatus() = EdmTaskStatus.EdmTaskStat_CancelPending Then
-                                inst.SetStatus(EdmTaskStatus.EdmTaskStat_DoneCancelled)
-                                Exit Sub
-                            End If
-
-                            'Handle Pausing the task
-                            If inst.GetStatus() = EdmTaskStatus.EdmTaskStat_SuspensionPending Then
-                                inst.SetStatus(EdmTaskStatus.EdmTaskStat_Suspended)
-                                While inst.GetStatus() = EdmTaskStatus.EdmTaskStat_Suspended
-                                    System.Threading.Thread.Sleep(1000)
-                                End While
-                                If inst.GetStatus() = EdmTaskStatus.EdmTaskStat_ResumePending Then
-                                    inst.SetStatus(EdmTaskStatus.EdmTaskStat_Running)
-                                End If
-                            End If
-
-                        Loop
-
-                        If vault.GetFileFromPath(filepathshared, pdmFolder).ID = vault.GetFileFromPath(filepathcurrent, pdmFolder).ID Then
 
                             pdmFolder = vault.GetFolderFromPath(PLANT_DRAWINGS)
                             pdmFile = vault.GetFileFromPath(filepathshared, pdmFolder)
@@ -312,7 +312,7 @@ Public Class SharedFolderGetLatestVersionTask
 
                         End If
 
-                    End If
+                    'End If
 
 
                 Else
@@ -326,7 +326,7 @@ Public Class SharedFolderGetLatestVersionTask
                         System.Threading.Thread.Sleep(1000)
                         x += 1
 
-                        inst.SetProgressPos(5, "Task is waiting until the file exists.")
+                        inst.SetProgressPos(5, "Task is waiting until the file exists...")
 
                         'Handle Cancelling the task
                         If inst.GetStatus() = EdmTaskStatus.EdmTaskStat_CancelPending Then
