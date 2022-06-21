@@ -1,0 +1,1 @@
+"C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS PDM\ViewSetup.exe" "%~dp0SRC Vault.cvs" /q
